@@ -3,6 +3,9 @@
 
 open FSharp.Plotly
 open FSharp.Data
+open System 
+
+type Training = { Date: DateTime; Activity: string; Series: int; Weight: double; RepetitionNumber: int }
 
 let readCsv (path: string) =
     try
@@ -11,6 +14,8 @@ let readCsv (path: string) =
     with ex -> 
         printfn "%A" ex
         None
+
+let parse(row: CsvRow) = 2
 
 let values =[66; 34]
 let labels =["How much I like this!";"Same but in orange"]
