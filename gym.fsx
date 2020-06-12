@@ -3,21 +3,47 @@
 
 open FSharp.Plotly
 open FSharp.Data
-open System 
+open System
 
-type Training = { Date: DateTime; Activity: string; Series: int; Weight: double; RepetitionNumber: int }
+let parseInt =
+    function
+    | ""
+    | null -> None
+    | str -> Some(int str)
 
-let readCsv (path: string) =
-    FSharp.Data.CsvFile.Load path
+let parseDouble =
+    function
+    | ""
+    | null -> None
+    | str -> Some(double str)
 
-let parse(row: FSharp.Data.CsvRow) = 
-    row.Columns |> Array.head
+type Training =
+    { Date: DateTime
+      Activity: string
+      Series: int option
+      Weight: double option
+      RepetitionNumber: int option }
 
 
-let csv = readCsv "E:\personal_projects\my-gym-statistics\GymRun.csv"
+let readCsv (path: string) = FSharp.Data.CsvFile.Load(path, ";")
 
-let data = csv.Rows |> Seq.map(parse)
+let parse (row: FSharp.Data.CsvRow) =
+    let date =
+        sprintf "%s %s" row.["Data"] row.["Czas"]
+        |> DateTime.Parse
+
+    { Date = date
+      Activity = row.["Ćwiczenie"]
+      Series = row.["Seria"] |> parseInt
+      Weight = row.["Waga"] |> parseDouble
+      RepetitionNumber = row.["Powt."] |> parseInt }
+
+
+let csv =
+    readCsv "E:\personal_projects\my-gym-statistics\GymRun.csv"
+
+let data = csv.Rows |> Seq.map (parse)
 
 //Chart.Pie(values,labels) |> Chart.Show
 
-printfn "%A" data
+printfn "%A" (data)
