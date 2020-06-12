@@ -8,19 +8,16 @@ open System
 type Training = { Date: DateTime; Activity: string; Series: int; Weight: double; RepetitionNumber: int }
 
 let readCsv (path: string) =
-    try
-        let data = FSharp.Data.CsvFile.Load path
-        data |> Some
-    with ex -> 
-        printfn "%A" ex
-        None
+    FSharp.Data.CsvFile.Load path
 
-let parse(row: CsvRow) = 2
+let parse(row: FSharp.Data.CsvRow) = 
+    row.Columns |> Array.head
 
-let values =[66; 34]
-let labels =["How much I like this!";"Same but in orange"]
+
 let csv = readCsv "E:\personal_projects\my-gym-statistics\GymRun.csv"
+
+let data = csv.Rows |> Seq.map(parse)
 
 //Chart.Pie(values,labels) |> Chart.Show
 
-printfn "%A" csv
+printfn "%A" data
