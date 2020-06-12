@@ -15,7 +15,7 @@ let parseDouble =
     function
     | ""
     | null -> None
-    | str -> Some(double str)
+    | str -> Some(Double.Parse str)
 
 type Training =
     { Date: DateTime
@@ -28,22 +28,43 @@ type Training =
 let readCsv (path: string) = FSharp.Data.CsvFile.Load(path, ";")
 
 let parse (row: FSharp.Data.CsvRow) =
-    let date =
-        sprintf "%s %s" row.["Data"] row.["Czas"]
-        |> DateTime.Parse
+    match row.["Data"], row.["Czas"] with
+    | "Data", "Czas"
+    | "", ""
+    | null, null -> None
+    | date, time ->
+        let dateTime =
+            sprintf "%s %s" date time |> DateTime.Parse
 
-    { Date = date
-      Activity = row.["Ćwiczenie"]
-      Series = row.["Seria"] |> parseInt
-      Weight = row.["Waga"] |> parseDouble
-      RepetitionNumber = row.["Powt."] |> parseInt }
+        Some
+            ({ Date = dateTime
+               Activity = row.["Ćwiczenie"]
+               Series = row.["Seria"] |> parseInt
+               Weight = row.["Waga"] |> parseDouble
+               RepetitionNumber = row.["Powt."] |> parseInt })
 
 
 let csv =
     readCsv "E:\personal_projects\my-gym-statistics\GymRun.csv"
 
-let data = csv.Rows |> Seq.map (parse)
+let data =
+    csv.Rows |> Seq.map (parse) |> Seq.choose id
 
-//Chart.Pie(values,labels) |> Chart.Show
+let activities =
+    data
+    |> Seq.groupBy (fun x -> x.Activity)
+    |> Seq.map (fun (key, activ) ->
+        {| Label = key
+           Count = activ |> Seq.length |})
+    |> Seq.sortByDescending(fun x -> x.Count)
+    |> Seq.take 5
 
-printfn "%A" (data)
+let labels =
+    activities
+    |> Seq.map (fun x -> x.Label)
+
+let values =
+    activities
+    |> Seq.map (fun x -> x.Count |> string)
+
+Chart.Pie(values, labels) |> Chart.Show
